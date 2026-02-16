@@ -3,45 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adel Luxury Store | متجر عادل للفخامة</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Adel Premium Store</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS المباشر لضمان الفخامة */
+        :root { --primary: #d4af37; --bg: #0a0a0a; --card-bg: #1a1a1a; --text: #ffffff; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Cairo', sans-serif; }
+        header { background: #000; padding: 20px; border-bottom: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        .logo { font-weight: bold; font-size: 1.5rem; }
+        .logo span { color: var(--primary); }
+        .hero { height: 40vh; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=1000'); background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; text-align: center; border-bottom: 1px solid #333; }
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; padding: 40px 5%; }
+        .product-card { background: var(--card-bg); border-radius: 15px; padding: 20px; text-align: center; border: 1px solid #333; transition: 0.3s; }
+        .product-card:hover { border-color: var(--primary); transform: translateY(-5px); }
+        .product-card img { width: 100%; height: 200px; object-fit: contain; margin-bottom: 15px; }
+        .price { color: var(--primary); font-size: 1.3rem; font-weight: bold; }
+        .buy-btn { background: var(--primary); color: #000; border: none; padding: 12px; border-radius: 25px; width: 100%; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        /* السلة */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; justify-content: center; align-items: center; }
+        .modal-content { background: #111; padding: 30px; border-radius: 20px; width: 90%; max-width: 450px; border: 1px solid var(--primary); text-align: center; }
+        .cliq-btn { background: #25D366; color: #fff; border: none; padding: 12px; border-radius: 25px; width: 100%; margin-top: 10px; font-weight: bold; cursor: pointer; }
+    </style>
 </head>
 <body>
+
     <header>
-        <div class="container">
-            <div class="logo">ADEL <span>PREMIUM</span></div>
-            <div class="cart-icon" onclick="toggleCart()">
-                🛒 <span id="cart-count">0</span>
-            </div>
-        </div>
+        <div class="logo">ADEL <span>PREMIUM</span></div>
+        <div onclick="toggleCart()" style="cursor:pointer">🛒 <span id="cart-count">0</span></div>
     </header>
 
     <section class="hero">
-        <div class="hero-content">
+        <div>
             <h1>مستقبل الهواتف بين يديك</h1>
-            <p>حصرياً في متجر المهندس عادل - أرقى هواتف سامسونج</p>
+            <p>حصرياً في متجر المهندس عادل</p>
         </div>
     </section>
 
-    <div class="container">
-        <main id="products-grid" class="products-grid"></main>
-    </div>
+    <div id="products-grid" class="products-grid"></div>
 
     <div id="cart-modal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="toggleCart()">&times;</span>
             <h2>سلة المشتريات</h2>
-            <div id="cart-items"></div>
-            <div class="cart-footer">
-                <div class="total">المجموع: <span id="cart-total">0</span> JOD</div>
-                <div id="paypal-button-container"></div>
-                <button class="cliq-btn" onclick="checkout()">إتمام الطلب عبر CliQ</button>
-            </div>
+            <div id="cart-items" style="margin-bottom: 20px;"></div>
+            <div style="font-size: 1.5rem; margin-bottom: 20px;">المجموع: <span id="cart-total">0</span> JOD</div>
+            <div id="paypal-button-container"></div>
+            <button class="cliq-btn" onclick="checkout()">الطلب عبر CliQ / واتساب</button>
+            <button onclick="toggleCart()" style="background:none; color:#999; border:none; margin-top:15px; cursor:pointer">إغلاق</button>
         </div>
     </div>
 
     <script src="https://www.paypal.com/sdk/js?client-id=AXIfd1fXxeXSIBnRRMqR3&currency=USD&locale=ar_JO"></script>
-    <script src="script.js"></script>
+    
+    <script>
+        const products = [
+            { id: 1, name: "Galaxy S25 Ultra", price: 950, img: "https://images.samsung.com/is/image/samsung/p6pim/levant/2501/gallery/levant-galaxy-s25-s938-sm-s938bztpmea-544520786" },
+            { id: 2, name: "Galaxy Z Fold 6", price: 1250, img: "https://images.samsung.com/is/image/samsung/p6pim/levant/sm-f956fzkamea/gallery/levant-galaxy-z-fold6-f956-sm-f956fzkamea-542358327" },
+            { id: 3, name: "Galaxy S24 Ultra", price: 780, img: "https://images.samsung.com/is/image/samsung/p6pim/levant/2401/gallery/levant-galaxy-s24-s928-sm-s928bztpmea-539327827" }
+        ];
+
+        let cart = [];
+
+        function renderProducts() {
+            const grid = document.getElementById('products-grid');
+            products.forEach(p => {
+                grid.innerHTML += `
+                    <div class="product-card">
+                        <img src="${p.img}">
+                        <h3>${p.name}</h3>
+                        <p class="price">${p.price} JOD</p>
+                        <button class="buy-btn" onclick="addToCart(${p.id})">أضف للسلة</button>
+                    </div>`;
+            });
+        }
+
+        function addToCart(id) {
+            const p = products.find(i => i.id === id);
+            cart.push(p);
+            updateUI();
+            toggleCart();
+        }
+
+        function updateUI() {
+            document.getElementById('cart-count').innerText = cart.length;
+            const itemsDiv = document.getElementById('cart-items');
+            itemsDiv.innerHTML = "";
+            let total = 0;
+            cart.forEach(item => {
+                total += item.price;
+                itemsDiv.innerHTML += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #333; padding:5px 0">
+                    <span>${item.name}</span><span>${item.price} JOD</span>
+                </div>`;
+            });
+            document.getElementById('cart-total').innerText = total;
+        }
+
+        function toggleCart() {
+            const m = document.getElementById('cart-modal');
+            m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        function checkout() {
+            if(cart.length === 0) return;
+            let total = document.getElementById('cart-total').innerText;
+            window.open(`https://wa.me/962785166443?text=طلب جديد من متجر عادل بقيمة ${total} JOD`, '_blank');
+        }
+
+        paypal.Buttons({
+            createOrder: (data, actions) => {
+                let totalUSD = (parseFloat(document.getElementById('cart-total').innerText) * 1.41).toFixed(2);
+                return actions.order.create({ purchase_units: [{ amount: { value: totalUSD } }] });
+            },
+            onApprove: (data, actions) => {
+                return actions.order.capture().then(() => { alert('تم الدفع! شكراً لك.'); cart = []; updateUI(); toggleCart(); });
+            }
+        }).render('#paypal-button-container');
+
+        renderProducts();
+    </script>
 </body>
 </html>
