@@ -1,85 +1,53 @@
 const products = [
-    {
-        id: 1,
-        name: "Samsung Galaxy S25 Ultra",
-        price: 950,
-        img: "https://images.samsung.com/is/image/samsung/p6pim/levant/2501/gallery/levant-galaxy-s25-s938-sm-s938bztpmea-544520786"
-    },
-    {
-        id: 2,
-        name: "Samsung Galaxy Z Fold 6",
-        price: 1250,
-        img: "https://images.samsung.com/is/image/samsung/p6pim/levant/sm-f956fzkamea/gallery/levant-galaxy-z-fold6-f956-sm-f956fzkamea-542358327"
-    },
-    {
-        id: 3,
-        name: "Samsung Galaxy S24 Ultra",
-        price: 780,
-        img: "https://images.samsung.com/is/image/samsung/p6pim/levant/2401/gallery/levant-galaxy-s24-s928-sm-s928bztpmea-539327827"
-    }
+    { id: 1, name: "Samsung Galaxy S25 Ultra", price: 760, img: "https://images.samsung.com/is/image/samsung/p6pim/levant/2401/gallery/levant-galaxy-s24-s928-sm-s928bztqmea-539305411" },
+    { id: 2, name: "Samsung Galaxy Z Fold 7", price: 1399, img: "https://images.samsung.com/is/image/samsung/p6pim/levant/sm-f946blbdmea/gallery/levant-galaxy-z-fold5-f946-sm-f946blbdmea-537411234" },
+    { id: 3, name: "Samsung Galaxy A56 5G", price: 235, img: "https://images.samsung.com/is/image/samsung/p6pim/levant/sm-a546ezkdmea/gallery/levant-galaxy-a54-5g-sm-a546-sm-a546ezkdmea-535919013" }
 ];
 
 let cart = [];
 
-// عرض المنتجات
-const grid = document.getElementById('products-grid');
-products.forEach(p => {
-    grid.innerHTML += `
-        <div class="product-card">
+function loadProducts() {
+    const grid = document.getElementById('products-grid');
+    grid.innerHTML = products.map(p => `
+        <div class="card">
             <img src="${p.img}" alt="${p.name}">
             <h3>${p.name}</h3>
-            <p class="price">${p.price} JOD</p>
-            <button class="buy-btn" onclick="addToCart(${p.id})">أضف إلى السلة</button>
+            <span class="price">${p.price} JOD</span>
+            <button class="add-btn" onclick="addToCart(${p.id})">إضافة للسلة</button>
         </div>
-    `;
-});
-
-function addToCart(id) {
-    const p = products.find(item => item.id === id);
-    cart.push(p);
-    updateCart();
-    toggleCart(); // يفتح السلة فوراً عند الإضافة
+    `).join('');
 }
 
-function updateCart() {
+function addToCart(id) {
+    const product = products.find(p => p.id === id);
+    cart.push(product);
+    updateCartUI();
+}
+
+function updateCartUI() {
     document.getElementById('cart-count').innerText = cart.length;
-    const itemsContainer = document.getElementById('cart-items');
-    itemsContainer.innerHTML = "";
-    let total = 0;
-    cart.forEach(item => {
-        total += item.price;
-        itemsContainer.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+    const list = document.getElementById('cart-items');
+    list.innerHTML = cart.map((item, i) => `
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
             <span>${item.name}</span>
-            <span>${item.price} JOD</span>
-        </div>`;
-    });
+            <b>${item.price} JOD</b>
+        </div>
+    `).join('');
+    const total = cart.reduce((sum, item) => sum + item.price, 0);
     document.getElementById('cart-total').innerText = total;
 }
 
 function toggleCart() {
-    const modal = document.getElementById('cart-modal');
-    modal.style.display = (modal.style.display === 'block') ? 'none' : 'block';
+    document.getElementById('cart-sidebar').classList.toggle('active');
 }
 
-function checkout() {
+function sendOrder() {
     if(cart.length === 0) return alert("السلة فارغة!");
-    let total = document.getElementById('cart-total').innerText;
-    let msg = `طلب جديد من متجر عادل:%0Aالمجموع: ${total} JOD%0Aيرجى تأكيد الدفع عبر CliQ لاسم المستلم: AMER818`;
-    window.open(`https://wa.me/962785166443?text=${msg}`, '_blank');
+    let text = "طلب شراء جديد من متجر عادل:%0A";
+    cart.forEach(item => text += `- ${item.name} (${item.price} JOD)%0A`);
+    const total = cart.reduce((sum, item) => sum + item.price, 0);
+    text += `%0A*المجموع: ${total} دينار أردني*`;
+    window.open(`https://wa.me/962785166443?text=${text}`);
 }
 
-// بايبال
-paypal.Buttons({
-    createOrder: function(data, actions) {
-        let totalUSD = (parseFloat(document.getElementById('cart-total').innerText) * 1.41).toFixed(2);
-        return actions.order.create({ purchase_units: [{ amount: { value: totalUSD } }] });
-    },
-    onApprove: function(data, actions) {
-        return actions.order.capture().then(() => {
-            alert('تم الدفع بنجاح! شكراً لثقتك بمتجر عادل.');
-            cart = [];
-            updateCart();
-            toggleCart();
-        });
-    }
-}).render('#paypal-button-container');
+loadProducts();
